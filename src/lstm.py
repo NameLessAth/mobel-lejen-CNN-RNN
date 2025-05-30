@@ -85,7 +85,7 @@ class LSTM_Network:
             'b_f': bias[units:2*units],
             'b_c': bias[2*units:3*units], 
             'b_o': bias[3*units:],
-            'units': units  # Add this line to include units
+            'units': units 
         }
     
     def lstm_forward(self, x_t, h_pre, c_pre, weights):
@@ -114,7 +114,6 @@ class LSTM_Network:
         if return_sequences:
             outputs = np.zeros((batch_size, seq_len, units))
         
-        # Process each time step
         for t in range(seq_len):
             h_t, c_t = self.lstm_forward(inputnya[:, t, :], h_t, c_t, weights)
             if return_sequences:
@@ -126,21 +125,15 @@ class LSTM_Network:
             return h_t
     
     def bidirectional_lstm_forward(self, inputnya, weights, return_sequences=False):
-        """DIY Bidirectional LSTM forward propagation"""
-        # Forward direction
         forward_output = self.lstm_forward_sequence(inputnya, weights['forward'], return_sequences)
-        
-        # Backward direction (reverse the sequence)
-        X_reversed = inputnya[:, ::-1, :]  # Reverse time dimension
+
+        X_reversed = inputnya[:, ::-1, :] 
         backward_output = self.lstm_forward_sequence(X_reversed, weights['backward'], return_sequences)
         
         if return_sequences:
-            # Reverse backward output back to original time order
             backward_output = backward_output[:, ::-1, :]
-            # Concatenate forward and backward outputs
             output = np.concatenate([forward_output, backward_output], axis=-1)
         else:
-            # Concatenate final states
             output = np.concatenate([forward_output, backward_output], axis=-1)
             
         return output
@@ -188,3 +181,11 @@ class LSTM_Network:
     def predict(self, inputnya):
         return self.forward_propagation(inputnya)
     
+    def cmp_keras(self, X):
+        keras_pred = self.model.predict(X, verbose=0)
+        diy_pred = self.predict(X)
+        
+        max_diff = np.max(np.abs(keras_pred - diy_pred))
+        mean_diff = np.mean(np.abs(keras_pred - diy_pred))
+        
+        return max_diff, mean_diff
